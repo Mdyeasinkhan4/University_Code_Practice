@@ -1,39 +1,48 @@
 import re
 
-def calc (a, b, op):
+def calc(a, b, op):
     if op == '+': return a + b
     if op == '-': return a - b
     if op == '*': return a * b
     if op == '/': return a / b
 
-s = "1+5+(3+2)"
+def precedence(op):
+    if op in '+-': return 1
+    if op in '*/': return 2
+    return 0
 
-vars = ''.join(sorted(set(re.findall('[a-z]', s))))
-tokens = re.findall('[a-z]+|\d+|[+*/-]', s)
+s = "2+3*(5-3)+14/7"
 
-values, ops = [], []
+# tokenization (numbers, operators, parentheses)
+tokens = re.findall(r'\d+|[()+\-*/]', s)
+
+values = []
+ops = []
 
 for t in tokens:
     if t.isdigit():
         values.append(int(t))
-    elif t.isalpha():
-        continue
 
-    else:
-        if not values:
-            continue
+    elif t == '(':
+        ops.append(t)
 
-        while ops and (t in '+-' and ops[-1] in '*/'):
+    elif t == ')':
+        while ops and ops[-1] != '(':
+            b = values.pop()
+            a = values.pop()
+            values.append(calc(a, b, ops.pop()))
+        ops.pop()  # remove '('
+
+    else:  # operator
+        while ops and precedence(t) <= precedence(ops[-1]):
             b = values.pop()
             a = values.pop()
             values.append(calc(a, b, ops.pop()))
         ops.append(t)
 
 while ops:
-    if len(values) < 2:
-        break
     b = values.pop()
     a = values.pop()
     values.append(calc(a, b, ops.pop()))
 
-print(vars + str(int(values[0])))
+print(values[0])
